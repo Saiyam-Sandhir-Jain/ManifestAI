@@ -133,30 +133,5 @@ def refine_prompt(user_manifest, system_role="expert prompt engineer"):
 
 
 def generate_image(prompt):
-    """Generate image using the Gemini API."""
-    api_key = ""  # Canvas will provide it
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${api_key}"
-    payload = {
-        "instances": {"prompt": prompt},
-        "parameters": {"sampleCount": 1}
-    }
-
-    try:
-        response = st.experimental_rerun_with_retries(
-            lambda: json.loads(requests.post(
-                api_url,
-                headers={'Content-Type': 'application/json'},
-                data=json.dumps(payload)
-            ).content.decode('utf-8')),
-            catch_exceptions=True
-        )
-
-        if (response and response.get('predictions') and 
-            len(response['predictions']) > 0 and 
-            response['predictions'][0].get('bytesBase64Encoded')):
-            return f"data:image/png;base64,{response['predictions'][0]['bytesBase64Encoded']}"
-        else:
-            return None
-    except Exception as e:
-        st.error(f"Error generating image: {e}")
-        return None
+    st.error(f"Error generating image: {e}")
+    return None
