@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import datetime
-from chat_manager import add_message
-from session_state import is_any_ai_processing
+from .chat_manager import add_message
+from .session_state import is_any_ai_processing
 import random
 
 

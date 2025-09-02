@@ -3,18 +3,18 @@ from datetime import datetime
 import time
 
 # Import our modular components
-from session_state import initialize_session_state, is_any_ai_processing
-from ui_components import (
+from ui.session_state import initialize_session_state, is_any_ai_processing
+from ui.ui_components import (
     get_css_styles, 
     render_initial_form, 
     validate_form_inputs, 
     process_form_submission,
     render_edit_prompt_section
 )
-from sidebar_components import render_sidebar
-from chat_manager import display_chat_history, add_message
-from prompt_intelligence import handle_assistant_response_streaming
-from ai_services import refine_prompt, generate_image
+from ui.sidebar_components import render_sidebar
+from ui.chat_manager import display_chat_history, add_message
+from ai.prompt_intelligence import handle_assistant_response_streaming
+from ai.ai_services import refine_prompt, generate_image
 
 # Configure page
 st.set_page_config(

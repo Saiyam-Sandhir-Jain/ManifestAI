@@ -3,7 +3,7 @@ import json
 import requests
 import numpy as np
 import streamlit as st
-from config import OLLAMA_BASE_URL, OLLAMA_EMBED_MODEL
+from .config import OLLAMA_BASE_URL, OLLAMA_EMBED_MODEL
 
 
 def get_embedding(text):

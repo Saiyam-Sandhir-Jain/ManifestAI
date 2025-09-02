@@ -1,9 +1,9 @@
 import streamlit as st
 import time
 from datetime import datetime
-from ai_services import get_embedding, cosine_similarity, refine_prompt
-from chat_manager import add_message
-from config import SIMILARITY_THRESHOLD
+from .ai_services import get_embedding, cosine_similarity, refine_prompt
+from ui.chat_manager import add_message
+from .config import SIMILARITY_THRESHOLD
 
 
 def determine_and_refine_prompt(user_query, current_prompt, current_manifest_components):

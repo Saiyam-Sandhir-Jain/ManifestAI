@@ -1,6 +1,6 @@
 import streamlit as st
-from ai_services import get_embedding
-from config import ROLE_DESCRIPTIONS, OLLAMA_EMBED_MODEL
+from ai.ai_services import get_embedding
+from ai.config import ROLE_DESCRIPTIONS, OLLAMA_EMBED_MODEL
 
 
 def initialize_session_state():
