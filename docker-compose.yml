@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # Ollama server service
+  ollama:
+    image: ollama/ollama:latest
+    container_name: manifest-ai-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - manifest-ai-network
+    restart: unless-stopped
+    # Use GPU if available (uncomment for NVIDIA GPU support)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Model initialization service
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: manifest-ai-ollama-init
+    depends_on:
+      - ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - manifest-ai-network
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    command: >
+      sh -c "
+        echo 'Waiting for Ollama server to be ready...' &&
+        until curl -f http://ollama:11434/api/version; do
+          echo 'Waiting for Ollama server...' &&
+          sleep 5
+        done &&
+        echo 'Ollama server is ready. Pulling models...' &&
+        ollama pull gemma3:4b &&
+        echo 'Gemma3 model pulled successfully.' &&
+        ollama pull mxbai-embed-large:latest &&
+        echo 'Embedding model pulled successfully.' &&
+        echo 'All models ready. Model initialization complete.'
+      "
+    restart: "no"
+
+  # Streamlit application service
+  streamlit-app:
+    build: .
+    container_name: manifest-ai-app
+    ports:
+      - "8501:8501"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
+      - ollama-init
+    networks:
+      - manifest-ai-network
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    # Wait for models to be ready
+    command: >
+      sh -c "
+        echo 'Waiting for Ollama models to be ready...' &&
+        until curl -f http://ollama:11434/api/tags | grep -q 'gemma3:4b'; do
+          echo 'Waiting for models to be pulled...' &&
+          sleep 10
+        done &&
+        echo 'Models are ready. Starting Streamlit application...' &&
+        streamlit run main.py --server.port=8501 --server.address=0.0.0.0
+      "
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  manifest-ai-network:
+    driver: bridge
