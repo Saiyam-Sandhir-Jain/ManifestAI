@@ -4,7 +4,9 @@ import requests
 import numpy as np
 import streamlit as st
 from .config import OLLAMA_BASE_URL, OLLAMA_EMBED_MODEL
-
+import os
+import vertexai
+from vertexai.preview.vision_models import ImageGenerationModel
 
 def get_embedding(text):
     """Get embeddings from Ollama for the given text."""
@@ -133,30 +135,40 @@ def refine_prompt(user_manifest, system_role="expert prompt engineer"):
 
 
 def generate_image(prompt):
-    """Generate image using the Gemini API."""
-    api_key = ""  # Canvas will provide it
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${api_key}"
-    payload = {
-        "instances": {"prompt": prompt},
-        "parameters": {"sampleCount": 1}
-    }
+    """Generate an image using Google Cloud Vertex AI."""
+    
+    # The SDK will automatically use the environment variables for authentication
+    project_id = os.getenv("GCP_PROJECT_ID")
+    location = os.getenv("GCP_LOCATION")
+
+    if not project_id or not location:
+        st.error("GCP_PROJECT_ID and GCP_LOCATION environment variables must be set.")
+        return None
 
     try:
-        response = st.experimental_rerun_with_retries(
-            lambda: json.loads(requests.post(
-                api_url,
-                headers={'Content-Type': 'application/json'},
-                data=json.dumps(payload)
-            ).content.decode('utf-8')),
-            catch_exceptions=True
+        vertexai.init(project=project_id, location=location)
+        
+        # Load the Imagen model
+        # Using imagegeneration@006 which is a recent stable version.
+        model = ImageGenerationModel.from_pretrained("imagegeneration@006")
+        
+        # Generate the image
+        images = model.generate_images(
+            prompt=prompt,
+            number_of_images=1,
+            # You can add more parameters here if needed, e.g., aspect_ratio="1:1"
         )
+        
+        # The response contains a list of Image objects.
+        # We get the image data and encode it in base64.
+        image_bytes = images[0]._image_bytes
+        
+        # Convert bytes to base64 string and create a data URI
+        import base64
+        base64_encoded_string = base64.b64encode(image_bytes).decode('utf-8')
+        
+        return f"data:image/png;base64,{base64_encoded_string}"
 
-        if (response and response.get('predictions') and 
-            len(response['predictions']) > 0 and 
-            response['predictions'][0].get('bytesBase64Encoded')):
-            return f"data:image/png;base64,{response['predictions'][0]['bytesBase64Encoded']}"
-        else:
-            return None
     except Exception as e:
-        st.error(f"Error generating image: {e}")
+        st.error(f"Error generating image with Vertex AI: {e}")
         return None

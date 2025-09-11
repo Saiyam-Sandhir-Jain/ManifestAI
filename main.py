@@ -1,6 +1,9 @@
 import streamlit as st
 from datetime import datetime
 import time
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 # Import our modular components
 from ui.session_state import initialize_session_state, is_any_ai_processing

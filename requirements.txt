@@ -2,3 +2,6 @@ streamlit
 ollama
 numpy
 requests
+google-cloud-aiplatform
+vertexai
+dotenv
